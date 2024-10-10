@@ -74,11 +74,12 @@ func GetOne(wr http.ResponseWriter, rq *http.Request) {
 // Create a new Product:
 func CreateProduct(wr http.ResponseWriter, rq *http.Request) {
 	wr.Header().Set("Content-Type", "application/json")
-	// json.NewDecoder(rq.Body).Decode(&product)
+	var product Product
+	json.NewDecoder(rq.Body).Decode(&product)
 	randomId := strconv.Itoa(rand.Intn(100000000))
+	fmt.Println(randomId)
 	AllProducts.AppendProduct(randomId, "name "+ randomId, "brand "+ randomId, "owner "+ randomId)
-	// AllProducts.Products = append(AllProducts.Products, )
-	// json.NewEncoder(wr).Encode(product)
+	json.NewEncoder(wr).Encode(AllProducts)
 }
 
 // Update an existing product:
@@ -90,10 +91,12 @@ func UpdateProduct(wr http.ResponseWriter, rq *http.Request) {
 	// loop over the products
 	for index, product := range AllProducts.Products {
 		if product.ID == params["id"] {
+			fmt.Println("Found")
 			AllProducts.Products[index].ID = "Updated"
 			AllProducts.Products[index].Name= "Updated"
 			AllProducts.Products[index].Maker.Brand = "Updated"
 			AllProducts.Products[index].Maker.Owner= "Updated"
+			json.NewEncoder(wr).Encode(AllProducts.Products[index])
 			break
 		}
 	}
@@ -107,6 +110,8 @@ func DeleteProduct(wr http.ResponseWriter, rq *http.Request) {
 	for index, product := range AllProducts.Products {
 		if product.ID == params["id"] {
 			AllProducts.Products = append(AllProducts.Products[:index], AllProducts.Products[index+1:]...)
+			fmt.Println(AllProducts)
+			json.NewEncoder(wr).Encode(AllProducts)
 			break
 		}
 	}
@@ -131,9 +136,9 @@ func Routing() {
 	router := mux.NewRouter()
 	router.HandleFunc("/products", GetAll).Methods("GET")
 	router.HandleFunc("/products/{id}", GetOne).Methods("GET")
-	router.HandleFunc("/products", CreateProduct).Methods("POST")
+	router.HandleFunc("/create", CreateProduct).Methods("POST")
 	router.HandleFunc("/products/{id}", UpdateProduct).Methods("PUT")
-	router.HandleFunc("/productq/{id}", DeleteProduct).Methods("Delete")
+	router.HandleFunc("/products/{id}", DeleteProduct).Methods("Delete")
 	fmt.Println("Starting a server at port: 8080")
 	http.ListenAndServe(":8080", router)
 }
